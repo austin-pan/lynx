@@ -1,5 +1,6 @@
 """Block that handles sparse data."""
 
+from typing import Tuple, Union
 import pandas as pd
 from scipy import sparse
 
@@ -16,7 +17,7 @@ class SparseBlock(Block):
         self,
         name: str,
         data: sparse.csr_matrix,
-        index: pd.Series | None = None
+        index: Union[pd.Series, None] = None
     ):
         """
         Args:
@@ -32,11 +33,11 @@ class SparseBlock(Block):
         self.data = data
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         return (len(self.index), self.data.shape[1])
 
     @property
-    def data_shape(self) -> tuple[int, int]:
+    def data_shape(self) -> Tuple[int, int]:
         return self.data.shape
 
     def to_dataframe(self) -> pd.DataFrame:

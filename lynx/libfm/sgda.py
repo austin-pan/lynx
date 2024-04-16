@@ -1,7 +1,7 @@
 """Block structure ALS tasks."""
 
 import os
-from typing import Iterable
+from typing import Iterable, Tuple, Union
 
 import lynx as lx
 from lynx import libfm
@@ -13,20 +13,20 @@ class SGDATask(tasks.DenseStatefulLibFMTask):
     def __init__(
         self,
         task: str,
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         X_validation: lx.Table, # Only SGDA
-        y_validation: Iterable[float | int], # Only SGDA
+        y_validation: Iterable[Union[float, int]], # Only SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             method="sgda",
@@ -51,7 +51,7 @@ class SGDATask(tasks.DenseStatefulLibFMTask):
     def write_validation(
         self,
         X_validation: lx.Table,
-        y_validation: Iterable[float | int],
+        y_validation: Iterable[Union[Union[float, int]]],
         verbose: bool = False
     ) -> None:
         validation_path = os.path.join(self.mat_dir, f"{self.validation}.libfm")
@@ -61,9 +61,9 @@ class SGDATask(tasks.DenseStatefulLibFMTask):
     def fit_validation(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         X_validation: lx.Table,
-        y_validation: Iterable[float | int],
+        y_validation: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
         self.write_validation(X_validation, y_validation, verbose=verbose)
@@ -72,7 +72,7 @@ class SGDATask(tasks.DenseStatefulLibFMTask):
     def fit(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
         raise AttributeError("SGDA uses `fit_validation`")
@@ -82,19 +82,19 @@ class FMRegression(SGDATask):
     def __init__(
         self,
         X_validation: lx.Table, # Only SGDA
-        y_validation: Iterable[float | int], # Only SGDA
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        y_validation: Iterable[Union[float, int]], # Only SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             X_validation=X_validation,
@@ -117,20 +117,20 @@ class FMClassification(SGDATask):
 
     def __init__(
         self,
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         X_validation: lx.Table, # Only SGDA
-        y_validation: Iterable[float | int], # Only SGDA
+        y_validation: Iterable[Union[float, int]], # Only SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             X_validation=X_validation,

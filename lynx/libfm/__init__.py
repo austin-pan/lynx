@@ -1,9 +1,8 @@
 """LibFM tools."""
 
-from __future__ import annotations
-
 import os
 import subprocess
+from typing import List, Tuple, Union
 
 
 LIBFM_HOME = os.environ["LIBFM_HOME"]
@@ -19,21 +18,21 @@ def run(
     task: str,
     train: str,
     test: str,
-    cache_size: int | None = None,
-    dim: tuple[int, int, int] = (1, 1, 8),
+    cache_size: Union[int, None] = None,
+    dim: Tuple[int, int, int] = (1, 1, 8),
     init_stdev: float = 0.1,
     iter_num: int = 100,
-    learn_rate: float | None = None, # Only SGD
-    load_model: str | None = None,
-    meta: str | None = None,
-    out: str | None = None,
-    regular: int | tuple[int, int, int] | None = None, # Only SGD and ALS
-    relation: list[str] | None = None, # Only block structure
-    rlog: str | None = None,
-    save_model: str | None = None,
-    seed: int | None = None,
-    validation: str | None = None, # Only SGDA
-    verbosity: int | None = None,
+    learn_rate: Union[float, None] = None, # Only SGD
+    load_model: Union[str, None] = None,
+    meta: Union[str, None] = None,
+    out: Union[str, None] = None,
+    regular: Union[int, Tuple[int, int, int], None] = None, # Only SGD and ALS
+    relation: Union[List[str], None] = None, # Only block structure
+    rlog: Union[str, None] = None,
+    save_model: Union[str, None] = None,
+    seed: Union[int, None] = None,
+    validation: Union[str, None] = None, # Only SGDA
+    verbosity: Union[int, None] = None,
     verbose: bool = False,
     **kwargs
 ) -> None:
@@ -46,7 +45,7 @@ def run(
         test (str): Filename for test file.
         task (str, optional): r=regression, c=binary classification. Defaults to
         "r".
-        dim (tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+        dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
         k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
         (1, 1, 8).
         num_iter (int, optional): Number of iterations. Defaults to 100.
@@ -54,7 +53,7 @@ def run(
         to "mcmc".
         init_stdev (float, optional): stdev for initialization of 2-way factors.
         Defaults to 0.1.
-        relation (list[str] | None, optional): Block Structure: filenames for
+        relation (List[str] | None, optional): Block Structure: filenames for
         the relations.  Defaults to None.
         verbose (bool, optional): Whether to print command line output. Defaults
         to False.
@@ -62,7 +61,7 @@ def run(
         e.g. `-key value`
 
     Returns:
-        tuple[list[float], float]: Test accuracy of each iteration and total
+        Tuple[List[float], float]: Test accuracy of each iteration and total
         runtime.
     """
     args = {
@@ -86,7 +85,7 @@ def run(
         args["out"] = out
     if regular is not None: # Only SGD and ALS
         reg_value = regular
-        if isinstance(reg_value, tuple):
+        if isinstance(reg_value, Tuple):
             reg_value = ",".join(str(r) for r in reg_value)
         args["regular"] = reg_value
     if relation is not None: # Block Structure mode
@@ -152,7 +151,7 @@ def transpose(mat_filename: str, *, verbose: bool = False):
     )
 
 
-def execute(cmd, *, verbose: bool = False) -> list[str]:
+def execute(cmd, *, verbose: bool = False) -> List[str]:
     """Run a command in the command line and return stdout."""
     def exec_cmd():
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True) as popen:
@@ -183,7 +182,7 @@ def create_dense_binaries(
 
 def create_bs_binaries(
     mat_dir: str,
-    block_names: list[str],
+    block_names: List[str],
     *,
     verbose: bool = False
 ) -> None:

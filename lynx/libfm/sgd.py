@@ -1,5 +1,6 @@
 """Block structure ALS tasks."""
 
+from typing import Tuple, Union
 from lynx.libfm import tasks
 
 
@@ -8,18 +9,18 @@ class SGDTask(tasks.DenseStatefulLibFMTask):
     def __init__(
         self,
         task: str,
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             method="sgd",
@@ -43,18 +44,18 @@ class FMRegression(SGDTask):
 
     def __init__(
         self,
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task="r",
@@ -75,18 +76,18 @@ class FMClassification(SGDTask):
 
     def __init__(
         self,
-        learn_rate: float | tuple[float, float, float], # Only SGD and SGDA
+        learn_rate: Union[float, Tuple[float, float, float]], # Only SGD and SGDA
         *,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task="c",

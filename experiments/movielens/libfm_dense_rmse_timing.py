@@ -9,9 +9,7 @@ from lynx.libfm import mcmc
 
 DATASET_PATH = "~/Downloads/lynx/datasets/movielens/ml-1m"
 SEED = 0
-
-# users_table = lx.Table(movielens.load_users(DATASET_PATH), "users")
-# movies_table = lx.Table(movielens.load_movies(DATASET_PATH), "movies")
+VERBOSE = False
 
 ratings_data = movielens.load_ratings(
     DATASET_PATH,
@@ -37,14 +35,16 @@ results = []
 for k in [1, 2, 4, 8]:
     print(f"k={k}")
 
-    fm = mcmc.FMRegression(dim=(1, 1, k))
+    fm = mcmc.FMRegression(iter_num=50, dim=(1, 1, k), seed=SEED)
     predictions_path = os.path.join(fm.mat_dir, "predictions.txt")
 
-    fm.write(X_train, y_train, X_test, verbose=True)
-    train_time = fm.train(predictions_path, verbose=True)
+    fm.write(X_train, y_train, X_test, verbose=VERBOSE)
+    train_time = fm.train(predictions_path, verbose=VERBOSE)
     predictions = fm.get_predictions(predictions_path)
     rmse = mean_squared_error(predictions, y_test, squared=False)
 
-    results.append({"k": k, "train_time": train_time, "rmse": rmse})
+    row = {"k": k, "train_time": train_time, "rmse": rmse}
+    results.append(row)
+    print(row)
     fm.flush()
 print(pd.DataFrame(results))

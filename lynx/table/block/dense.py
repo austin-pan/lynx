@@ -1,6 +1,7 @@
 """Block that handles densed, named data."""
 
 from copy import deepcopy
+from typing import List, Tuple, Union
 import pandas as pd
 from scipy import sparse
 
@@ -18,7 +19,7 @@ class DenseBlock(Block):
         self,
         name: str,
         data: pd.DataFrame,
-        index: pd.Series | None = None
+        index: Union[pd.Series, None] = None
     ):
         """
         Args:
@@ -34,15 +35,15 @@ class DenseBlock(Block):
         super().__init__(name, index)
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         return (len(self.index), self.data.shape[1])
 
     @property
-    def data_shape(self) -> tuple[int, int]:
+    def data_shape(self) -> Tuple[int, int]:
         return self.data.shape
 
     @property
-    def columns(self) -> list[str]:
+    def columns(self) -> List[str]:
         """Returns the column names in this Block's data."""
         return self.data.columns.to_list()
 
@@ -66,7 +67,7 @@ class DenseBlock(Block):
         """
         return self.data.pop(column).take(self.index).reset_index(drop=True) # type: ignore
 
-    def drop(self, column: str | list[str]) -> Block:
+    def drop(self, column: Union[str, List[str]]) -> Block:
         """Returns a new Block with the provided column removed."""
         copy = deepcopy(self)
         copy.data = self.data.drop(columns=column, errors="ignore")

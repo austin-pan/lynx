@@ -10,9 +10,6 @@ from lynx.datasets import movielens
 DATASET_PATH = "~/Downloads/lynx/datasets/movielens/ml-1m"
 SEED = 0
 
-# users_table = lx.Table(movielens.load_users(DATASET_PATH), "users")
-# movies_table = lx.Table(movielens.load_movies(DATASET_PATH), "movies")
-
 ratings_data = movielens.load_ratings(
     DATASET_PATH,
     usecols=["user_id", "movie_id", "rating"],
@@ -37,7 +34,7 @@ results = []
 for k in [1, 2, 4, 8]:
     print(f"k={k}")
 
-    fm = mcmc.FMRegression(rank=k, init_stdev=0.1)
+    fm = mcmc.FMRegression(n_iter=50, rank=k, init_stdev=0.1, random_state=SEED)
     start_time = time.perf_counter()
     predictions = fm.fit_predict(
         X_train.to_csr_matrix(),
@@ -47,5 +44,7 @@ for k in [1, 2, 4, 8]:
     end_time = time.perf_counter()
     rmse = mean_squared_error(predictions, y_test, squared=False)
 
-    results.append({"k": k, "train_time": end_time - start_time, "rmse": rmse})
+    row = {"k": k, "train_time": end_time - start_time, "rmse": rmse}
+    results.append(row)
+    print(row)
 print(pd.DataFrame(results))

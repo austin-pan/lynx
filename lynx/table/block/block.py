@@ -1,8 +1,7 @@
 """Block data structure."""
 
-from __future__ import annotations
-
 from copy import deepcopy
+from typing import List, Tuple, Union
 import pandas as pd
 from scipy import sparse
 
@@ -27,12 +26,12 @@ class Block:
         self.index = index
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         """Height and width of this Block after materialization."""
         raise NotImplementedError()
 
     @property
-    def data_shape(self) -> tuple[int, int]:
+    def data_shape(self) -> Tuple[int, int]:
         """Height and width of the internal data of this Block."""
         raise NotImplementedError()
 
@@ -52,7 +51,7 @@ class Block:
         """Returns the name to use to track this block's index."""
         return f"{index_prefix}_{self.name}"
 
-    def take(self, indices: int | list[int]) -> Block:
+    def take(self, indices: Union[int, List[int]]) -> "Block":
         """Returns a new Block with the requested positionally indexed rows."""
         if isinstance(indices, int):
             indices = [indices]
@@ -60,7 +59,7 @@ class Block:
         block.index = self.index.take(indices)
         return block
 
-    def reindex(self, index: pd.Series) -> Block:
+    def reindex(self, index: pd.Series) -> "Block":
         """Returns a new Block with the index set to the provided index."""
         block = deepcopy(self)
         block.index = index

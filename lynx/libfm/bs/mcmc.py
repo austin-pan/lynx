@@ -2,7 +2,7 @@
 
 import os
 import time
-from typing import Iterable
+from typing import Iterable, List, Tuple, Union
 
 import lynx as lx
 from lynx import libfm
@@ -15,14 +15,14 @@ class MCMCTask(tasks.StatelessLibFMTask):
         self,
         task: str,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             method="mcmc",
@@ -43,7 +43,7 @@ class MCMCTask(tasks.StatelessLibFMTask):
     def write(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         X_test: lx.Table,
         verbose: bool = False
     ) -> None:
@@ -82,7 +82,7 @@ class MCMCTask(tasks.StatelessLibFMTask):
         end_time = time.perf_counter()
         return end_time - start_time
 
-    def get_predictions(self, outpath: str) -> list[float]:
+    def get_predictions(self, outpath: str) -> List[float]:
         predictions = []
         with open(outpath, "r", encoding="utf-8") as f:
             predictions = f.readlines()
@@ -91,10 +91,10 @@ class MCMCTask(tasks.StatelessLibFMTask):
     def fit_predict(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         X_test: lx.Table,
         verbose: bool = False
-    ) -> list[float]:
+    ) -> List[float]:
         """Stateless so can only do both fit and predict together."""
         self.write(X_train, y_train, X_test, verbose=verbose)
         outpath = os.path.join(self.mat_dir, "predictions.txt")
@@ -107,14 +107,14 @@ class FMRegression(MCMCTask):
     def __init__(
         self,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task = "r",
@@ -133,14 +133,14 @@ class FMClassification(MCMCTask):
     def __init__(
         self,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        meta: str | None = None,
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        meta: Union[str, None] = None,
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task = "c",

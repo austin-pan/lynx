@@ -1,7 +1,6 @@
 """Table class and utilities."""
 
-from __future__ import annotations
-
+from typing import Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -18,8 +17,8 @@ class Table:
 
     def __init__(
         self,
-        data: list[B.Block] | pd.DataFrame | sparse.csr_matrix,
-        block_name: str | None = None):
+        data: Union[List[B.Block], pd.DataFrame, sparse.csr_matrix],
+        block_name: Union[str, None] = None):
         """
         Args:
             data (list[B.Block] | pd.DataFrame | sparse.csr_matrix): Data to
@@ -56,19 +55,9 @@ class Table:
     def __len__(self) -> int:
         return self.height
 
-    def __getitem__(self, key: str | list[str]) -> pd.Series | pd.DataFrame:
-        if isinstance(key, str):
-            block = self._get_block(key)
-            return block.get(key)
-
-        return self.get(key)
-
-    @property
-    def iloc(self):
-        """
-        Ignored. Necessary to camoflauge as a Pandas DataFrame for
-        `sklearn.model_selection.train_test_split`.
-        """
+    def __getitem__(self, key: Union[int, List[int]]) -> Union[pd.Series, pd.DataFrame, "Table"]:
+        """Necessary for `sklearn.datasets.train_test_split` to work."""
+        return self.take(key)
 
     @property
     def width(self) -> int:
@@ -76,17 +65,17 @@ class Table:
         return sum(block.shape[1] for block in self.blocks)
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         """Height and width of this table when all blocks are materialized."""
         return (self.height, self.width)
 
     @property
-    def block_shapes(self) -> dict[str, tuple[int, int]]:
+    def block_shapes(self) -> Dict[str, Tuple[int, int]]:
         """Mapping of block names to the shape of each block's internal data."""
         return { block.name: block.data_shape for block in self.blocks }
 
     @property
-    def block_names(self) -> list[str]:
+    def block_names(self) -> List[str]:
         """Block names."""
         return [block.name for block in self.blocks]
 
@@ -109,8 +98,8 @@ class Table:
 
     def get_indexed_columns(
         self,
-        columns: str | list[str],
-        index_prefix: str | None = None
+        columns: Union[str, List[str]],
+        index_prefix: Union[str, None] = None
     ) -> pd.DataFrame:
         """
         Returns specified columns of this table, concatenated with the indices
@@ -131,7 +120,7 @@ class Table:
         indices = self._get_indices(index_prefix)
         return pd.concat([indices, column_value], axis=1)
 
-    def _get_indices(self, index_prefix: str | None = None) -> pd.DataFrame:
+    def _get_indices(self, index_prefix: Union[str, None] = None) -> pd.DataFrame:
         """
         Returns the indices of each block in this Table.
 
@@ -173,7 +162,7 @@ class Table:
                 return block
         raise ValueError(f"{column} not found")
 
-    def get(self, columns: str | list[str]) -> pd.DataFrame:
+    def get(self, columns: Union[str, List[str]]) -> pd.DataFrame:
         """
         Returns column values of this Table.
 
@@ -210,7 +199,7 @@ class Table:
         self.blocks = [block for block in self.blocks if block.shape[1] > 0]
         return values
 
-    def take(self, indices: int | list[int], axis=None) -> Table:
+    def take(self, indices: Union[int, List[int]], axis=None) -> "Table":
         """
         Returns the rows in the given positional indices as a new Table.
 
@@ -225,7 +214,7 @@ class Table:
         blocks = [block.take(indices) for block in self.blocks]
         return Table(blocks)
 
-    def drop(self, columns: str | list[str]) -> Table:
+    def drop(self, columns: Union[str, List[str]]) -> "Table":
         """
         Returns a copy of this Table with the given columns removed.
 
@@ -244,7 +233,7 @@ class Table:
         ]
         return Table(blocks)
 
-    def concat(self, other: Table) -> Table:
+    def concat(self, other: "Table") -> "Table":
         """
         Returns a new Table with this and the other Tables' blocks concatenated.
 
@@ -256,7 +245,7 @@ class Table:
         """
         return self.extend(other.blocks)
 
-    def extend(self, blocks: list[B.Block]) -> Table:
+    def extend(self, blocks: List[B.Block]) -> "Table":
         """
         Returns a new Table with this Table's blocks concatenated with the
         provided blocks.
@@ -272,47 +261,47 @@ class Table:
 
     def merge(
         self,
-        other: Table,
-        left_on: str | list[str],
-        right_on: str | list[str],
+        other: "Table",
+        left_on: Union[str, List[str]],
+        right_on: Union[str, List[str]],
         *,
         drop_left_on: bool = False
-    ) -> Table:
+    ) -> "Table":
         return merge(self, other, left_on, right_on, drop_left_on=drop_left_on)
 
     def onehot(
         self,
-        columns: str | list[str],
-        block_name: str | None = None,
+        columns: Union[str, List[str]],
+        block_name: Union[str, None] = None,
         *,
         drop: bool = True
-    ) -> Table:
+    ) -> "Table":
         return onehot(self, columns, block_name, drop=drop)
 
     def normalize(
         self,
-        columns: str | list[str],
-        block_name: str | None = None,
+        columns: Union[str, List[str]],
+        block_name: Union[str, None] = None,
         *,
         drop: bool = True
-    ) -> Table:
+    ) -> "Table":
         return normalize(self, columns, block_name, drop=drop)
 
     def explode(
         self,
         column: str,
-        block_name: str | None = None,
+        block_name: Union[str, None] = None,
         *,
         drop: bool = True
-    ) -> Table:
+    ) -> "Table":
         return explode(self, column, block_name, drop=drop)
 
     def model_interactions(
         self,
-        index_features: str | list[str],
-        value_features: str | list[str],
-        block_name: str | None = None,
-    ) -> Table:
+        index_features: Union[str, List[str]],
+        value_features: Union[str, List[str]],
+        block_name: Union[str, None] = None,
+    ) -> "Table":
         return model_interactions(
             self,
             index_features,
@@ -323,8 +312,8 @@ class Table:
 def merge(
     left: Table,
     right: Table,
-    left_on: str | list[str],
-    right_on: str | list[str],
+    left_on: Union[str, List[str]],
+    right_on: Union[str, List[str]],
     *,
     drop_left_on: bool = False
 ) -> Table:
@@ -379,8 +368,8 @@ def merge(
 
 def onehot(
     table: Table,
-    columns: str | list[str],
-    block_name: str | None = None,
+    columns: Union[str, List[str]],
+    block_name: Union[str, None] = None,
     *,
     drop: bool = True
 ) -> Table:
@@ -416,8 +405,8 @@ def onehot(
 
 def normalize(
     table: Table,
-    columns: str | list[str],
-    block_name: str | None = None,
+    columns: Union[str, List[str]],
+    block_name: Union[str, None] = None,
     *,
     drop: bool = True
 ) -> Table:
@@ -452,7 +441,7 @@ def normalize(
 def explode(
     table: Table,
     column: str,
-    block_name: str | None = None,
+    block_name: Union[str, None] = None,
     *,
     drop: bool = True
 ) -> Table:
@@ -485,9 +474,9 @@ def explode(
 
 def model_interactions(
     table: Table,
-    index_features: str | list[str],
-    value_features: str | list[str],
-    block_name: str | None = None,
+    index_features: Union[str, List[str]],
+    value_features: Union[str, List[str]],
+    block_name: Union[str, None] = None,
     use_onehot: bool = False,
 ) -> Table:
     """

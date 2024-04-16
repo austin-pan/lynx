@@ -2,6 +2,7 @@
 Utilities for data wrangling.
 """
 
+from typing import List, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -23,8 +24,8 @@ def stringify_series(series: pd.Series) -> str:
 
 def get_unique_mapping(
     dataframe: pd.DataFrame,
-    columns: str | list[str],
-) -> tuple[pd.Series, pd.DataFrame]:
+    columns: Union[str, List[str]],
+) -> Tuple[pd.Series, pd.DataFrame]:
     """
     Returns the index mapping of the unique values of the provided dataframe to
     the original values. Also returns the dataframe with duplicates dropped with
@@ -85,8 +86,8 @@ def multihot_series(series: pd.Series) -> sparse.csr_matrix:
 
 def sparse_pivot(
     dataframe: pd.DataFrame,
-    idx_vars: str | list[str],
-    value_vars: str | list[str]
+    idx_vars: Union[str, List[str]],
+    value_vars: Union[str, List[str]]
 ) -> sparse.csr_matrix:
     """
     Pivots the provided dataframe to the indexes (rows) and values (columns)

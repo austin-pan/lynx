@@ -1,5 +1,6 @@
 """Dense ALS tasks."""
 
+from typing import Tuple, Union
 from lynx.libfm import tasks
 
 
@@ -9,16 +10,16 @@ class ALSTask(tasks.DenseStatefulLibFMTask):
         self,
         task: str,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             method="als",
@@ -42,16 +43,16 @@ class FMRegression(ALSTask):
     def __init__(
         self,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task="r",
@@ -72,16 +73,16 @@ class FMClassification(ALSTask):
     def __init__(
         self,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        load_model: str | None = None,
-        meta: str | None = None,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        rlog: str | None = None,
-        seed: int | None = None,
-        verbosity: int | None = None
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        verbosity: Union[int, None] = None
     ):
         super().__init__(
             task="c",

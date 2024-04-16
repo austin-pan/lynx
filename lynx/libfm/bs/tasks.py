@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Iterable
+from typing import Iterable, List, Tuple, Union
 
 import lynx as lx
 from lynx import libfm
@@ -15,20 +15,20 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
         train_file: str,
         test_file: str,
         *,
-        cache_size: int | None = None,
-        dim: tuple[int, int, int] = (1, 1, 8),
+        cache_size: Union[int, None] = None,
+        dim: Tuple[int, int, int] = (1, 1, 8),
         init_stdev: float = 0.1,
         iter_num: int = 100,
-        learn_rate: float | None = None, # Only SGD
-        load_model: str | None = None,
-        meta: str | None = None,
-        regularizations: float | tuple[float, float, float] | None = None, # Only SGD and ALS
-        rlog: str | None = None,
-        seed: int | None = None,
-        validation: str | None = None, # Only SGDA
-        verbosity: int | None = None,
+        learn_rate: Union[float, None] = None, # Only SGD
+        load_model: Union[str, None] = None,
+        meta: Union[str, None] = None,
+        regularizations: Union[float, Tuple[float, float, float], None] = None, # Only SGD and ALS
+        rlog: Union[str, None] = None,
+        seed: Union[int, None] = None,
+        validation: Union[str, None] = None, # Only SGDA
+        verbosity: Union[int, None] = None,
 
-        mat_dir: str | None = None
+        mat_dir: Union[str, None] = None
     ):
         super().__init__(
             method,
@@ -56,7 +56,7 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
     def write(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
         # Write train libfm files
@@ -88,13 +88,13 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
     def fit(
         self,
         X_train: lx.Table,
-        y_train: Iterable[float | int],
+        y_train: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
         self.write(X_train, y_train, verbose=verbose)
         self.train(verbose=verbose)
 
-    def predict(self, X_test: lx.Table, verbose: bool = False) -> list[float]:
+    def predict(self, X_test: lx.Table, verbose: bool = False) -> List[float]:
         # NOTE `predict` is not reproducible unless a seed has been used because it
         # requires 1 iteration of training to get predictions
         assert X_test.block_names == self.relation, "Tables must have the same schema (block names)"

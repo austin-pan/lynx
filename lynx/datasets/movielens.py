@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from typing import List, Union
 import pandas as pd
 
 def download(destination: str) -> None:
@@ -18,8 +19,8 @@ def download(destination: str) -> None:
 
 def load_users(
     dataset_path: str,
-    nrows: int | None = None,
-    usecols: list[str] | None = None
+    nrows: Union[int, None] = None,
+    usecols: Union[List[str], None] = None
 ) -> pd.DataFrame:
     dataset_path = os.path.expanduser(dataset_path)
     return pd.read_csv(
@@ -34,8 +35,8 @@ def load_users(
 
 def load_movies(
     dataset_path: str,
-    nrows: int | None = None,
-    usecols: list[str] | None = None
+    nrows: Union[int, None] = None,
+    usecols: Union[List[str], None] = None
 ) -> pd.DataFrame:
     dataset_path = os.path.expanduser(dataset_path)
     return pd.read_csv(
@@ -50,8 +51,8 @@ def load_movies(
 
 def load_ratings(
     dataset_path: str,
-    nrows: int | None = None,
-    usecols: list[str] | None = None
+    nrows: Union[int, None] = None,
+    usecols: Union[List[str], None] = None
 ) -> pd.DataFrame:
     dataset_path = os.path.expanduser(dataset_path)
     return pd.read_csv(
