@@ -1,3 +1,8 @@
+"""
+Produce RMSE and timing statistics for FastFM. Note: FastFM only works with
+Python 3.6 or lower.
+"""
+
 import time
 import pandas as pd
 from sklearn.metrics import mean_squared_error
@@ -29,6 +34,8 @@ X_train, X_test, y_train, y_test = train_test_split(
     test_size=0.2,
     random_state=SEED
 )
+X_train = X_train.to_csr_matrix()
+X_test = X_test.to_csr_matrix()
 
 results = []
 for k in [1, 2, 4, 8]:
@@ -36,15 +43,12 @@ for k in [1, 2, 4, 8]:
 
     fm = mcmc.FMRegression(n_iter=50, rank=k, init_stdev=0.1, random_state=SEED)
     start_time = time.perf_counter()
-    predictions = fm.fit_predict(
-        X_train.to_csr_matrix(),
-        y_train,
-        X_test.to_csr_matrix()
-    )
+    predictions = fm.fit_predict(X_train, y_train, X_test)
     end_time = time.perf_counter()
     rmse = mean_squared_error(predictions, y_test, squared=False)
+    train_time = end_time - start_time
 
-    row = {"k": k, "train_time": end_time - start_time, "rmse": rmse}
+    row = {"k": k, "train_time": train_time, "rmse": rmse}
     results.append(row)
     print(row)
 print(pd.DataFrame(results))

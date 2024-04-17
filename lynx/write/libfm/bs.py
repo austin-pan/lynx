@@ -9,6 +9,7 @@ def write_libfm(
     table: lx.Table,
     target: Iterable[float],
     dir_path: str,
+    filename: str,
     phase: str,
     *,
     ignore_block: bool = False,
@@ -23,7 +24,15 @@ def write_libfm(
     Args:
         table (Table): Table to write.
         target (Iterable[float]): Target values to use.
-        path (str): Output filepath.
+        dir_path (str): Output filepath.
+        filename (str): Target filename.
+        phase (str): Train or test.
+        ignore_block (bool, optional): Whether to not write blocks. Defaults to
+        False.
+        empty_indices (bool, optional): Whether to not write mapping indices.
+        Defaults to False.
+        empty_targets (bool, optional): Whether to not write targets. Defaults
+        to False.
     """
     for block in table.blocks:
         if not ignore_block:
@@ -50,7 +59,7 @@ def write_libfm(
             with open(index_path, "w", encoding="utf-8"):
                 pass
 
-    target_path = os.path.join(dir_path, phase)
+    target_path = os.path.join(dir_path, filename)
     if not empty_targets:
         np.savetxt(
             fname=target_path,

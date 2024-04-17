@@ -1,3 +1,6 @@
+"""Writer for SVMLight sparse file type."""
+
+
 from typing import Iterable
 from sklearn import datasets
 

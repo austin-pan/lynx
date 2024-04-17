@@ -35,34 +35,51 @@ def run(
     verbosity: Union[int, None] = None,
     verbose: bool = False,
     **kwargs
-) -> None:
+) -> List[str]:
     """
     Run LibFM on the files in the provided directory.
 
     Args:
-        mat_dir (str): Directory with LibFM files.
-        train (str): Filename for train data.
-        test (str): Filename for test file.
-        task (str, optional): r=regression, c=binary classification. Defaults to
-        "r".
+        mat_dir (str): Directory with libFM files.
+        method (str): Learning method ("sgd", "sgda", "als", "mcmc").
+        task (str): "r"=regression, "c"=binary classification.
+        train (str): Filename for training data.
+        test (str): Filename for test data.
+        cache_size (int | None, optional): Cache size for data storage (only
+        applicable if data is in binary format). Defaults to None.
         dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
         k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
         (1, 1, 8).
-        num_iter (int, optional): Number of iterations. Defaults to 100.
-        method (str, optional): Learning method (SGD, SGDA, ALS, MCMC). Defaults
-        to "mcmc".
-        init_stdev (float, optional): stdev for initialization of 2-way factors.
-        Defaults to 0.1.
-        relation (List[str] | None, optional): Block Structure: filenames for
-        the relations.  Defaults to None.
-        verbose (bool, optional): Whether to print command line output. Defaults
-        to False.
-        **kwargs: Key-value pair that get passed to libFM as flag-value pairs,
-        e.g. `-key value`
+        init_stdev (float, optional): Standard deviation for initialization of
+        2-way factors. Defaults to 0.1.
+        iter_num (int, optional): number of iterations. Defaults to 100.
+        learn_rate (float | None, optional): learn_rate for SGD. Defaults to
+        None.
+        load_model (str | None, optional): Filename with saved model to load
+        before running. Defaults to None.
+        meta (str | None, optional): Filename for meta (group) information about
+        data set. Defaults to None.
+        out (str | None, optional): Filename to write prediction output to.
+        Defaults to None.
+        regular (int | Tuple[int, int, int] | None, optional): (r0,r1,r2) for
+        SGD and ALS: r0=bias regularization, r1=1-way regularization, r2=2-way
+        regularization. Defaults to None.
+        relation (List[str] | None, optional): Names of relation files. Block
+        structure only. Defaults to None.
+        rlog (str | None): Filename to write iterative measurements to. Defaults to None.
+        save_model (str | None, optional): Filename to save model weights to.
+        Only supported by ALS, SGD, and SGDA. Defaults to None.
+        seed (int | None, optional): Random state seed. Defaults to None.
+        validation (str | None, optional): Filename for validation data (only
+        for SGDA). Defaults to None.
+        verbosity (int | None, optional): How much info to output to internal
+        command line. Use `verbose` to print the output. Defaults to None.
+        verbose (bool, optional): Whether to display libFM command line output.
+        Defaults to False.
+        **kwargs: Additional flag-value pair to pass to libFM.
 
-    Returns:
-        Tuple[List[float], float]: Test accuracy of each iteration and total
-        runtime.
+    Return:
+        List[str]: Command line output
     """
     args = {
         "method": method,
@@ -116,8 +133,9 @@ def run(
     if verbose:
         print(" ".join(cmd))
 
-    execute(cmd, verbose=verbose)
+    cmd_output = execute(cmd, verbose=verbose)
     os.chdir(cwd)
+    return cmd_output
 
 def convert(mat_filename: str, *, verbose: bool = False):
     """Converts LibFM text file to binary file."""

@@ -1,5 +1,6 @@
-import os
-import time
+"""Blocks structure task base with state."""
+
+
 from typing import Iterable, List, Tuple, Union
 
 import lynx as lx
@@ -7,6 +8,7 @@ from lynx import libfm
 from lynx.libfm import tasks
 
 class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
+    """Block structure task with state."""
 
     def __init__(
         self,
@@ -60,59 +62,39 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
         verbose: bool = False
     ) -> None:
         # Write train libfm files
-        lx.write.libfm.bs(X_train, y_train, self.mat_dir, phase="train")
+        lx.write.libfm.bs(X_train, y_train, self.mat_dir, self.train_file, phase="train")
         # Write empty test libfm files
-        lx.write.libfm.bs(X_train, y_train, self.mat_dir, phase="test",
+        lx.write.libfm.bs(X_train, y_train, self.mat_dir, self.test_file, phase="test",
                           ignore_block=True, empty_indices=True, empty_targets=True)
         self.relation = X_train.block_names
         libfm.create_bs_binaries(self.mat_dir, X_train.block_names, verbose=verbose)
 
-    def train(self, verbose: bool = False, time_only: bool = False) -> float:
-        start_time = time.perf_counter()
-        if not time_only:
-            self.run(
-                relation=self.relation,
-                save_model=self.model_name,
-                seed=self.seed,
-                verbose=verbose
-            )
-        else:
-            self.run(
-                relation=self.relation,
-                seed=self.seed,
-                verbose=verbose
-            )
-        end_time = time.perf_counter()
-        return end_time - start_time
-
-    def fit(
-        self,
-        X_train: lx.Table,
-        y_train: Iterable[Union[float, int]],
-        verbose: bool = False
-    ) -> None:
-        self.write(X_train, y_train, verbose=verbose)
-        self.train(verbose=verbose)
+    def train(self, verbose: bool = False, no_output: bool = False) -> List[str]:
+        save_model = None if no_output else self.model_name
+        return self.run(
+            relation=self.relation,
+            save_model=save_model,
+            seed=self.seed,
+            verbose=verbose
+        )
 
     def predict(self, X_test: lx.Table, verbose: bool = False) -> List[float]:
-        # NOTE `predict` is not reproducible unless a seed has been used because it
-        # requires 1 iteration of training to get predictions
         assert X_test.block_names == self.relation, "Tables must have the same schema (block names)"
 
-        outpath = os.path.join(self.mat_dir, "predictions.txt")
         # Dummy y_test
         y_test = [0] * X_test.height
-        lx.write.libfm.bs(X_test, y_test, self.mat_dir, phase="test", ignore_block=True)
+        lx.write.libfm.bs(X_test, y_test, self.mat_dir, self.test_file, phase="test",
+                          ignore_block=True)
         self.run(
             relation=self.relation,
             load_model=self.model_name,
             seed=self.seed,
             iter_num=1,
-            out=outpath,
+            out=self.out,
             verbose=verbose
         )
 
         predictions = []
-        with open(outpath, "r", encoding="utf-8") as f:
+        with open(self.out, "r", encoding="utf-8") as f:
             predictions = f.readlines()
         return list(map(float, predictions))

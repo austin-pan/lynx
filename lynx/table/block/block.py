@@ -1,7 +1,7 @@
 """Block data structure."""
 
 from copy import deepcopy
-from typing import List, Tuple, Union
+from typing import Sequence, Tuple, Union
 import pandas as pd
 from scipy import sparse
 
@@ -51,7 +51,7 @@ class Block:
         """Returns the name to use to track this block's index."""
         return f"{index_prefix}_{self.name}"
 
-    def take(self, indices: Union[int, List[int]]) -> "Block":
+    def take(self, indices: Union[int, Sequence[int]]) -> "Block":
         """Returns a new Block with the requested positionally indexed rows."""
         if isinstance(indices, int):
             indices = [indices]

@@ -1,6 +1,6 @@
 """Table class and utilities."""
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -18,15 +18,16 @@ class Table:
     def __init__(
         self,
         data: Union[List[B.Block], pd.DataFrame, sparse.csr_matrix],
-        block_name: Union[str, None] = None):
+        block_name: Union[str, None] = None
+    ):
         """
         Args:
-            data (list[B.Block] | pd.DataFrame | sparse.csr_matrix): Data to
+            data (List[B.Block] | pd.DataFrame | sparse.csr_matrix): Data to
             initialize this Table with. Can be Blocks that make up this Table or
             tabular structure to create the initial Block of this Table. If data
             is a tabular structure, then an associated name must be provided as
             well.
-            name (str | None): If data is a DataFrame or Sparse Matrix, then
+            block_name (str | None): If data is a DataFrame or Sparse Matrix, then
             this is the name to use for the initial Block. Defaults to None.
         """
         if isinstance(data, pd.DataFrame):
@@ -35,7 +36,7 @@ class Table:
         if isinstance(data, sparse.csr_matrix):
             assert block_name is not None, "name must be supplied with Sparse Matrix."
             data = [B.SparseBlock(block_name, data)]
-        blocks: list[B.Block] = data
+        blocks: List[B.Block] = data
 
         # Remove blocks with no columns
         blocks = [block for block in blocks if block.shape[1] > 0]
@@ -55,8 +56,14 @@ class Table:
     def __len__(self) -> int:
         return self.height
 
-    def __getitem__(self, key: Union[int, List[int]]) -> Union[pd.Series, pd.DataFrame, "Table"]:
-        """Necessary for `sklearn.datasets.train_test_split` to work."""
+    def __getitem__(
+        self,
+        key: Union[int, Sequence[int]]
+    ) -> Union[pd.Series, pd.DataFrame, "Table"]:
+        """
+        Necessary for `sklearn.datasets.train_test_split` to work. Equivalent to
+        `take`.
+        """
         return self.take(key)
 
     @property
@@ -78,6 +85,14 @@ class Table:
     def block_names(self) -> List[str]:
         """Block names."""
         return [block.name for block in self.blocks]
+
+    @property
+    def block_nnz(self) -> int:
+        """
+        Number of non-zero elements in the non-materialized blocks when in
+        sparse form.
+        """
+        return sum(block.get_block_csr_matrix().nnz for block in self.blocks)
 
     def has_dense_block(self) -> bool:
         """Returns whether this Table has a DenseBlock."""
@@ -106,7 +121,7 @@ class Table:
         of each block.
 
         Args:
-            columns (str | list[str]): Columns to return.
+            columns (str | List[str]): Columns to return.
             index_prefix (str | None, optional): String prefix to add to each index
             column. Defaults to None.
 
@@ -167,7 +182,7 @@ class Table:
         Returns column values of this Table.
 
         Args:
-            columns (str | list[str]): Columns to get.
+            columns (str | List[str]): Columns to get.
 
         Returns:
             pd.DataFrame: Concatenatation of column values.
@@ -199,12 +214,12 @@ class Table:
         self.blocks = [block for block in self.blocks if block.shape[1] > 0]
         return values
 
-    def take(self, indices: Union[int, List[int]], axis=None) -> "Table":
+    def take(self, indices: Union[int, Sequence[int]], axis=None) -> "Table":
         """
         Returns the rows in the given positional indices as a new Table.
 
         Args:
-            indices (list[int]): Positional indices of rows to return.
+            indices (int | Sequence[int]): Positional indices of rows to return.
             axis (None): Ignored. Necessary to camouflage as Pandas DataFrame
             for `sklearn.model_selection.train_test_split`.
 
@@ -219,7 +234,7 @@ class Table:
         Returns a copy of this Table with the given columns removed.
 
         Args:
-            columns (str | list[str]): Columns to drop.
+            columns (str | List[str]): Columns to drop.
 
         Returns:
             Table: New Table with columns dropped from this Table.
@@ -251,7 +266,7 @@ class Table:
         provided blocks.
 
         Args:
-            blocks (list[B.Block]): Blocks to extend.
+            blocks (List[B.Block]): Blocks to extend.
 
         Returns:
             Table: New Table with concatenated blocks.
@@ -267,6 +282,20 @@ class Table:
         *,
         drop_left_on: bool = False
     ) -> "Table":
+        """
+        Merges this Table with another Table using a database-style inner join.
+
+        Args:
+            other (Table): Other Table.
+            left_on (str | List[str]): Columns in this Table to merge on.
+            right_on (str | List[str]): Columns in the other Table to merge on.
+            drop_left_on (bool, optional): Whether to drop the merging columns in
+            left Table. Otherwise drops the merging columns in the right Table.
+            Defaults to False.
+
+        Returns:
+            Table: New Table of the merged Tables.
+        """
         return merge(self, other, left_on, right_on, drop_left_on=drop_left_on)
 
     def onehot(
@@ -276,6 +305,21 @@ class Table:
         *,
         drop: bool = True
     ) -> "Table":
+        """
+        Returns a new Table with an additional block that is the one-hot
+        encoding of the provided columns.
+
+        Args:
+            columns (str | List[str]): Columns to one-hot encode.
+            block_name (str | None, optional): Name to use for the new one-hot
+            encoded block. If None, then joins the provided column names with an
+            underscore and appends "_onehot". Defaults to None.
+            drop (bool, optional): Whether to drop the provided columns. Defaults to
+            True.
+
+        Returns:
+            Table: Table with one-hot encoded columns.
+        """
         return onehot(self, columns, block_name, drop=drop)
 
     def normalize(
@@ -285,6 +329,21 @@ class Table:
         *,
         drop: bool = True
     ) -> "Table":
+        """
+        Returns a new Table with an additional block that is the database
+        normalization of the provided columns.
+
+        Args:
+            columns (str | List[str]): Columns to normalize.
+            block_name (str | None, optional): Name to use for the new one-hot
+            encoding block. If None, then joins the provided column names with an
+            underscore and appends "_normalized". Defaults to None.
+            drop (bool, optional): Whether to drop the provided columns. Defaults to
+            True.
+
+        Returns:
+            Table: Table with normalized columns.
+        """
         return normalize(self, columns, block_name, drop=drop)
 
     def explode(
@@ -294,6 +353,21 @@ class Table:
         *,
         drop: bool = True
     ) -> "Table":
+        """
+        Returns a new Table with an additional block that is the multi-hot encoding
+        of the provided columns.
+
+        Args:
+            column (str): Column to explode.
+            block_name (str | None, optional): Name to use for the new multi-hot
+            encoded block. If None, then appends "_exploded" to the provided column
+            name. Defaults to None.
+            drop (bool, optional): Whether to drop the provided column. Defaults to
+            True.
+
+        Returns:
+            Table: Table with the exploded column.
+        """
         return explode(self, column, block_name, drop=drop)
 
     def model_interactions(
@@ -302,6 +376,20 @@ class Table:
         value_features: Union[str, List[str]],
         block_name: Union[str, None] = None,
     ) -> "Table":
+        """
+        Returns a new Table with an additional block that is the interaction matrix
+        between the provided index and value features.
+
+        Args:
+            index_features (str | List[str]): Index columns.
+            value_features (str | List[str]): Value columns.
+            block_name (str | None, optional): Name to use for the new interactions
+            block. If None, then joins the provided column names with an
+            underscore and appends "_interactions". Defaults to None.
+
+        Returns:
+            Table: Table with the feature interactions.
+        """
         return model_interactions(
             self,
             index_features,
@@ -323,8 +411,8 @@ def merge(
     Args:
         left (Table): Left Table.
         right (Table): Right Table.
-        left_on (str | list[str]): Columns in the left Table to merge on.
-        right_on (str | list[str]): Columns in the right Table to merge on.
+        left_on (str | List[str]): Columns in the left Table to merge on.
+        right_on (str | List[str]): Columns in the right Table to merge on.
         drop_left_on (bool, optional): Whether to drop the merging columns in
         left Table. Otherwise drops the merging columns in the right Table.
         Defaults to False.
@@ -379,7 +467,7 @@ def onehot(
 
     Args:
         table (Table): Table with columns to one-hot encode.
-        columns (str | list[str]): Columns to one-hot encode.
+        columns (str | List[str]): Columns to one-hot encode.
         block_name (str | None, optional): Name to use for the new one-hot
         encoded block. If None, then joins the provided column names with an
         underscore and appends "_onehot". Defaults to None.
@@ -416,7 +504,7 @@ def normalize(
 
     Args:
         table (Table): Table with columns to normalize.
-        columns (str | list[str]): Columns to normalize.
+        columns (str | List[str]): Columns to normalize.
         block_name (str | None, optional): Name to use for the new one-hot
         encoding block. If None, then joins the provided column names with an
         underscore and appends "_normalized". Defaults to None.
@@ -485,8 +573,8 @@ def model_interactions(
 
     Args:
         table (Table): Table with index and value columns.
-        index_features (str | list[str]): Index columns.
-        value_features (str | list[str]): Value columns.
+        index_features (str | List[str]): Index columns.
+        value_features (str | List[str]): Value columns.
         block_name (str | None, optional): Name to use for the new interactions
         block. If None, then joins the provided column names with an
         underscore and appends "_interactions". Defaults to None.

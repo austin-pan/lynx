@@ -1,4 +1,4 @@
-
+"""libFM task base classes."""
 
 
 import os
@@ -11,6 +11,7 @@ from lynx import libfm
 
 
 class LibFMTask:
+    """libFM task base."""
 
     def __init__(
         self,
@@ -34,6 +35,39 @@ class LibFMTask:
         # Only used by lynx, not by the libFM tool
         mat_dir: Union[str, None] = None
     ):
+        """
+        Args:
+            method (str): Learning method ("sgd", "sgda", "als", "mcmc").
+            task (str): "r"=regression, "c"=binary classification.
+            train_file (str): Filename for training data.
+            test_file (str): Filename for test data.
+            cache_size (int | None, optional): Cache size for data storage (only
+            applicable if data is in binary format). Defaults to None.
+            dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+            k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
+            (1, 1, 8).
+            init_stdev (float, optional): Standard deviation for initialization of
+            2-way factors. Defaults to 0.1.
+            iter_num (int, optional): number of iterations. Defaults to 100.
+            learn_rate (float | None, optional): learn_rate for SGD. Defaults to
+            None.
+            meta (str | None, optional): Filename for meta (group) information about
+            data set. Defaults to None.
+            regular (int | Tuple[int, int, int] | None, optional): (r0,r1,r2) for
+            SGD and ALS: r0=bias regularization, r1=1-way regularization, r2=2-way
+            regularization. Defaults to None.
+            rlog (str | None): Filename to write iterative measurements to.
+            Defaults to None.
+            seed (int | None, optional): Random state seed. Defaults to None.
+            validation (str | None, optional): Filename for validation data (only
+            for SGDA). Defaults to None.
+            verbosity (int | None, optional): How much info to output to internal
+            command line. Use `verbose` to print the output. Defaults to None.
+            mat_dir (str | None, optional): Directory with libFM files. Defaults
+            to creating a directory in `/tmp`. Only used by `lynx`, not passed to
+            libFM.
+            **kwargs: Additional flag-value pair to pass to libFM.
+        """
         self.method = method
         self.task = task
         self.train_file = train_file
@@ -56,11 +90,13 @@ class LibFMTask:
             self.mat_dir = os.path.join("/tmp", dir_name)
         else:
             self.mat_dir = mat_dir
+
+        self.out = os.path.join(self.mat_dir, "predictions.txt")
         os.makedirs(self.mat_dir, exist_ok=True)
 
-    def run(self, **kwargs) -> None:
+    def run(self, **kwargs) -> List[str]:
         """Run LibFM with specified flags and values."""
-        args = {
+        libfm_args = {
             "method": self.method,
             "task": self.task,
             "train": self.train_file,
@@ -77,14 +113,23 @@ class LibFMTask:
             "validation": self.validation,
             "verbosity": self.verbosity
         }
-        args.update(kwargs)
-        libfm.run(self.mat_dir, **args)
+        defined_kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        libfm_args.update(defined_kwargs)
+        return libfm.run(self.mat_dir, **libfm_args)
+
+    def get_predictions(self) -> List[float]:
+        """Read written predictions after FM has been fitted."""
+        predictions = []
+        with open(self.out, "r", encoding="utf-8") as f:
+            predictions = f.readlines()
+        return list(map(float, predictions))
 
     def flush(self) -> None:
         """Remove LibFM files."""
         shutil.rmtree(self.mat_dir)
 
 class StatelessLibFMTask(LibFMTask):
+    """libFM task without state base. Allows saving and loading of models."""
 
     def __init__(
         self,
@@ -107,6 +152,38 @@ class StatelessLibFMTask(LibFMTask):
 
         mat_dir: Union[str, None] = None
     ):
+        """
+        Args:
+            method (str): Learning method ("sgd", "sgda", "als", "mcmc").
+            task (str): "r"=regression, "c"=binary classification.
+            train_file (str): Filename for training data.
+            test_file (str): Filename for test data.
+            cache_size (int | None, optional): Cache size for data storage (only
+            applicable if data is in binary format). Defaults to None.
+            dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+            k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
+            (1, 1, 8).
+            init_stdev (float, optional): Standard deviation for initialization of
+            2-way factors. Defaults to 0.1.
+            iter_num (int, optional): number of iterations. Defaults to 100.
+            learn_rate (float | None, optional): learn_rate for SGD. Defaults to
+            None.
+            meta (str | None, optional): Filename for meta (group) information about
+            data set. Defaults to None.
+            regular (int | Tuple[int, int, int] | None, optional): (r0,r1,r2) for
+            SGD and ALS: r0=bias regularization, r1=1-way regularization, r2=2-way
+            regularization. Defaults to None.
+            rlog (str | None): Filename to write iterative measurements to.
+            Defaults to None.
+            seed (int | None, optional): Random state seed. Defaults to None.
+            validation (str | None, optional): Filename for validation data (only
+            for SGDA). Defaults to None.
+            verbosity (int | None, optional): How much info to output to internal
+            command line. Use `verbose` to print the output. Defaults to None.
+            mat_dir (str | None, optional): Directory with libFM files. Only used
+            by `lynx`, not passed to libFM. Defaults to creating a directory in `/tmp`.
+            **kwargs: Additional flag-value pair to pass to libFM.
+        """
         super().__init__(
             method,
             task,
@@ -134,14 +211,38 @@ class StatelessLibFMTask(LibFMTask):
         X_test: lx.Table,
         verbose: bool = False
     ) -> None:
+        """
+        Write libFM SVMLight files and create corresponding libFM binaries.
+
+        Args:
+            X_train (lx.Table): Train data.
+            y_train (Iterable[Union[float, int]]): Train targets.
+            X_test (lx.Table): Test data.
+            verbose (bool, optional): Whether to print progress. Defaults to
+            False.
+        """
         raise NotImplementedError()
 
     def train(
         self,
-        outpath: str,
         verbose: bool = False,
-        time_only: bool = False
-    ) -> float:
+        no_output: bool = False
+    ) -> List[str]:
+        """
+        Run libFM command for fitting and predicting FM.
+
+        If `no_output` is set to True, then no predictions will be output which
+        will cause `get_predictions` to fail.
+
+        Args:
+            verbose (bool, optional): Whether to print train progress. Train
+            statistics should be ignored. Defaults to False.
+            no_output (bool, optional): Whether to ignore reading files to get
+            most accurate timings. Defaults to False.
+
+        Returns:
+            List[str]: Command line output.
+        """
         raise NotImplementedError()
 
     def fit_predict(
@@ -151,9 +252,28 @@ class StatelessLibFMTask(LibFMTask):
         X_test: lx.Table,
         verbose: bool = False
     ) -> List[float]:
-        raise NotImplementedError()
+        """
+        Fit and predict FM. Convenience function for `write` then `train`.
+
+        Do not use for timing. To get training time, run `write` and then time
+        `train`. Afterwards, to get predictions, use `get_predictions`.
+
+        Args:
+            X_train (lx.Table): Train data.
+            y_train (Iterable[Union[float, int]]): Train data targets.
+            X_test (lx.Table): Test data.
+            verbose (bool, optional): Whether to print train progress. Train
+            statistics should be ignored. Defaults to False.
+
+        Returns:
+            List[float]: Test predictions.
+        """
+        self.write(X_train, y_train, X_test, verbose=verbose)
+        self.train(verbose=verbose)
+        return self.get_predictions()
 
 class StatefulLibFMTask(LibFMTask):
+    """libFM task with state base. Allows saving and loading of models."""
 
     def __init__(
         self,
@@ -177,6 +297,40 @@ class StatefulLibFMTask(LibFMTask):
 
         mat_dir: Union[str, None] = None
     ):
+        """
+        Args:
+            method (str): Learning method ("sgd", "sgda", "als", "mcmc").
+            task (str): "r"=regression, "c"=binary classification.
+            train_file (str): Filename for training data.
+            test_file (str): Filename for test data.
+            cache_size (int | None, optional): Cache size for data storage (only
+            applicable if data is in binary format). Defaults to None.
+            dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+            k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
+            (1, 1, 8).
+            init_stdev (float, optional): Standard deviation for initialization of
+            2-way factors. Defaults to 0.1.
+            iter_num (int, optional): number of iterations. Defaults to 100.
+            learn_rate (float | None, optional): learn_rate for SGD. Defaults to
+            None.
+            load_model (str | None, optional): Filename with saved model to load.
+            Defaults to None.
+            meta (str | None, optional): Filename for meta (group) information about
+            data set. Defaults to None.
+            regular (int | Tuple[int, int, int] | None, optional): (r0,r1,r2) for
+            SGD and ALS: r0=bias regularization, r1=1-way regularization, r2=2-way
+            regularization. Defaults to None.
+            rlog (str | None): Filename to write iterative measurements to.
+            Defaults to None.
+            seed (int | None, optional): Random state seed. Defaults to None.
+            validation (str | None, optional): Filename for validation data (only
+            for SGDA). Defaults to None.
+            verbosity (int | None, optional): How much info to output to internal
+            command line.
+            mat_dir (str | None, optional): Directory with libFM files. Only used
+            by `lynx`, not passed to libFM. Defaults to creating a directory in `/tmp`.
+            **kwargs: Additional flag-value pair to pass to libFM.
+        """
         super().__init__(
             method,
             task,
@@ -205,9 +359,37 @@ class StatefulLibFMTask(LibFMTask):
         y_train: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
+        """
+        Write libFM SVMLight files and create corresponding libFM binaries.
+
+        Args:
+            X_train (lx.Table): Train data.
+            y_train (Iterable[float | int]): Train targets.
+            verbose (bool, optional): Whether to print progress. Defaults to
+            False.
+        """
         raise NotImplementedError()
 
-    def train(self, verbose: bool = False, time_only: bool = False) -> float:
+    def train(
+        self,
+        verbose: bool = False,
+        no_output: bool = False
+    ) -> List[str]:
+        """
+        Run libFM command for fitting FM.
+
+        If `no_output` is set to True, then no model state will be saved which
+        will cause `predict` to fail.
+
+        Args:
+            verbose (bool, optional): Whether to print train progress. Train
+            statistics should be ignored. Defaults to False.
+            no_output (bool, optional): Whether to ignore reading files to get
+            most accurate timings. Defaults to False.
+
+        Returns:
+            List[str]: Command line output.
+        """
         raise NotImplementedError()
 
     def fit(
@@ -216,12 +398,46 @@ class StatefulLibFMTask(LibFMTask):
         y_train: Iterable[Union[float, int]],
         verbose: bool = False
     ) -> None:
-        raise NotImplementedError()
+        """
+        Fit FM. Convenience function for `write` then `train`.
+
+        Do not use for timing. To get training time, run `write` and then time
+        `train`.
+
+        Args:
+            X_train (lx.Table): Train data.
+            y_train (Iterable[float | int]): Train data targets.
+            verbose (bool, optional): Whether to print train progress. Train
+            statistics should be ignored. Defaults to False.
+        """
+        self.write(X_train, y_train, verbose=verbose)
+        self.train(verbose=verbose)
 
     def predict(self, X_test: lx.Table, verbose: bool = False) -> List[float]:
+        """
+        Returns libFM task predictions for the rows in the provided test data.
+
+        NOTE: `predict` is not reproducible unless a seed has been used because
+        libFM requires 1 additional iteration of training to produce
+        predictions.
+
+        Args:
+            X_test (lx.Table): Test data.
+            verbose (bool, optional): Whether to print prediction progress.
+            Defaults to False.
+
+        Returns:
+            List[float]: Test predictions.
+        """
         raise NotImplementedError()
 
     def save_model(self, path: str) -> None:
+        """
+        Save FM model to a specified filepath.
+
+        Args:
+            path (str): Filepath to save model.
+        """
         model_path = os.path.join(self.mat_dir, self.model_name)
         shutil.copy(model_path, path)
 
@@ -249,6 +465,40 @@ class DenseStatefulLibFMTask(StatefulLibFMTask):
 
         mat_dir: Union[str, None] = None
     ):
+        """
+        Args:
+            method (str): Learning method ("sgd", "sgda", "als", "mcmc").
+            task (str): "r"=regression, "c"=binary classification.
+            train_file (str): Filename for training data.
+            test_file (str): Filename for test data.
+            cache_size (int | None, optional): Cache size for data storage (only
+            applicable if data is in binary format). Defaults to None.
+            dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+            k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
+            (1, 1, 8).
+            init_stdev (float, optional): Standard deviation for initialization of
+            2-way factors. Defaults to 0.1.
+            iter_num (int, optional): number of iterations. Defaults to 100.
+            learn_rate (float | None, optional): learn_rate for SGD. Defaults to
+            None.
+            load_model (str | None, optional): Filename with saved model to load.
+            Defaults to None.
+            meta (str | None, optional): Filename for meta (group) information about
+            data set. Defaults to None.
+            out (str | None, optional): Filename to write prediction output to.
+            Defaults to None.
+            regular (int | Tuple[int, int, int] | None, optional): (r0,r1,r2) for
+            SGD and ALS: r0=bias regularization, r1=1-way regularization, r2=2-way
+            regularization. Defaults to None.
+            rlog (str | None): Filename to write iterative measurements to.
+            Defaults to None.
+            seed (int | None, optional): Random state seed. Defaults to None.
+            verbosity (int | None, optional): How much info to output to internal
+            command line.
+            mat_dir (str | None, optional): Directory with libFM files. Only used
+            by `lynx`, not passed to libFM. Defaults to creating a directory in `/tmp`.
+            **kwargs: Additional flag-value pair to pass to libFM.
+        """
         super().__init__(
             method,
             task,
@@ -288,29 +538,11 @@ class DenseStatefulLibFMTask(StatefulLibFMTask):
         lx.write.libfm.dense(X_train, y_train, test_file_path, empty=True)
         libfm.create_dense_binaries(self.mat_dir, libfm_test_file, verbose=verbose)
 
-    def train(self, verbose: bool = False, time_only: bool = False) -> float:
-        """time_only = False is necessary for `predict` to work!"""
-        start_time = time.perf_counter()
-        if not time_only:
-            self.run(save_model=self.model_name, seed=self.seed, verbose=verbose)
-        else:
-            self.run(seed=self.seed, verbose=verbose)
-        end_time = time.perf_counter()
-        return end_time - start_time
-
-    def fit(
-        self,
-        X_train: lx.Table,
-        y_train: Iterable[Union[float, int]],
-        verbose: bool = False
-    ) -> None:
-        self.write(X_train, y_train, verbose=verbose)
-        self.train(verbose=verbose)
+    def train(self, verbose: bool = False, no_output: bool = False) -> List[str]:
+        save_model = None if no_output else self.model_name
+        return self.run(save_model=save_model, seed=self.seed, verbose=verbose)
 
     def predict(self, X_test: lx.Table, verbose: bool = False) -> List[float]:
-        # NOTE `predict` is not reproducible unless a seed has been used because it
-        # requires 1 iteration of training to get predictions
-        outpath = os.path.join(self.mat_dir, "predictions.txt")
         # Dummy y_test
         y_test = [0] * X_test.height
         libfm_test_file = f"{self.test_file}.libfm"
@@ -322,11 +554,7 @@ class DenseStatefulLibFMTask(StatefulLibFMTask):
             load_model=self.model_name,
             seed=self.seed,
             iter_num=1,
-            out=outpath,
+            out=self.out,
             verbose=verbose
         )
-
-        predictions = []
-        with open(outpath, "r", encoding="utf-8") as f:
-            predictions = f.readlines()
-        return list(map(float, predictions))
+        return self.get_predictions()

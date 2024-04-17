@@ -1,3 +1,5 @@
+"""Table package."""
+
 from lynx.table.table import (
     Table,
     merge,

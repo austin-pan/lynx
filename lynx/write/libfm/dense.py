@@ -19,6 +19,8 @@ def write_libfm(
         table (Table): Table to write.
         target (Iterable[float]): Target values to use.
         path (str): Output filepath.
+        empty (bool, optional): Whether to write an empty file. Defaults to
+        None.
     """
     if not empty:
         data = table.to_csr_matrix()

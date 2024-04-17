@@ -1,6 +1,4 @@
-"""
-Utilities for data wrangling.
-"""
+"""Utilities for data wrangling."""
 
 from typing import List, Tuple, Union
 import numpy as np
