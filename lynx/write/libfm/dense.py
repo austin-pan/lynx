@@ -1,3 +1,6 @@
+"""Writer to Dense Structure libFM files."""
+
+
 from typing import Iterable
 from sklearn import datasets
 

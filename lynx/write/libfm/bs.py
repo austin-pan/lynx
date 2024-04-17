@@ -1,3 +1,6 @@
+"""Writer to Block Structure libFM files."""
+
+
 import os
 from typing import Iterable
 from sklearn import datasets

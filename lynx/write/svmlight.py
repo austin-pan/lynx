@@ -1,4 +1,4 @@
-"""Writer for SVMLight sparse file type."""
+"""Writer to SVMLight sparse files."""
 
 
 from typing import Iterable
