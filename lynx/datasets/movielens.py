@@ -7,14 +7,14 @@ import pandas as pd
 
 def download_1m(destination: str) -> None:
     """
-    Download MovieLens-1M to the provided destination.
+    Download the MovieLens-1M dataset to the provided destination.
 
     Args:
         destination (str): Directory to download dataset to.
     """
     destination = os.path.expanduser(destination)
     os.makedirs(destination, exist_ok=True)
-    archive_path = os.path.join(destination, 'ml-1m.zip')
+    archive_path = os.path.join(destination, "ml-1m.zip")
     commands = [
         f"curl -o {archive_path} http://files.grouplens.org/datasets/movielens/ml-1m.zip",
         f"unzip {archive_path} -d {destination}"
@@ -25,18 +25,18 @@ def download_1m(destination: str) -> None:
 
 def load_users(
     dataset_path: str,
-    nrows: Union[int, None] = None,
-    usecols: Union[List[str], None] = None
+    *,
+    usecols: Union[List[str], None] = None,
+    nrows: Union[int, None] = None
 ) -> pd.DataFrame:
     """
     Load user data as pandas DataFrame.
 
     Args:
         dataset_path (str): Directory with MovieLens data.
+        usecols (List[str] | None, optional): Columns to use. Defaults to None.
         nrows (int | None, optional): Number of rows to read. Defaults to
         None.
-        usecols (List[str] | None, optional): Columns to use. Chosen from
-        ["user_id", "gender", "age", "occupation", "zipcode"]. Defaults to None.
 
     Returns:
         pd.DataFrame: User data.
@@ -54,18 +54,18 @@ def load_users(
 
 def load_movies(
     dataset_path: str,
-    nrows: Union[int, None] = None,
-    usecols: Union[List[str], None] = None
+    *,
+    usecols: Union[List[str], None] = None,
+    nrows: Union[int, None] = None
 ) -> pd.DataFrame:
     """
     Load movie data as pandas DataFrame.
 
     Args:
         dataset_path (str): Directory with MovieLens data.
+        usecols (List[str] | None, optional): Columns to use. Defaults to None.
         nrows (int | None, optional): Number of rows to read. Defaults to
         None.
-        usecols (List[str] | None, optional): Columns to use. Chosen from
-        ["movie_id", "title", "genres"]. Defaults to None.
 
     Returns:
         pd.DataFrame: Movie data.
@@ -83,18 +83,18 @@ def load_movies(
 
 def load_ratings(
     dataset_path: str,
+    *,
+    usecols: Union[List[str], None] = None,
     nrows: Union[int, None] = None,
-    usecols: Union[List[str], None] = None
 ) -> pd.DataFrame:
     """
     Load Rating data as pandas DataFrame.
 
     Args:
         dataset_path (str): Directory with MovieLens data.
+        usecols (List[str] | None, optional): Columns to use. Defaults to None.
         nrows (int | None, optional): Number of rows to read. Defaults to
         None.
-        usecols (List[str] | None, optional): Columns to use. Chosen from
-        ["user_id", "movie_id", "rating", "timestamp"]. Defaults to None.
 
     Returns:
         pd.DataFrame: Rating data.
