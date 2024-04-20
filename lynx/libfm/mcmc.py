@@ -46,8 +46,6 @@ class MCMCTask(tasks.StatelessLibFMTask):
         super().__init__(
             method="mcmc",
             task=task,
-            train_file="_libfm_train",
-            test_file="_libfm_test",
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,

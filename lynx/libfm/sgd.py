@@ -52,8 +52,6 @@ class SGDTask(tasks.DenseStatefulLibFMTask):
         super().__init__(
             method="sgd",
             task=task,
-            train_file="_libfm_train",
-            test_file="_libfm_test",
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,

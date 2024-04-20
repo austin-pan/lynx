@@ -17,8 +17,6 @@ class LibFMTask:
         self,
         method: str,
         task: str,
-        train_file: str,
-        test_file: str,
         *,
         cache_size: Union[int, None] = None,
         dim: Tuple[int, int, int] = (1, 1, 8),
@@ -39,8 +37,6 @@ class LibFMTask:
         Args:
             method (str): Learning method ("sgd", "sgda", "als", "mcmc").
             task (str): "r"=regression, "c"=binary classification.
-            train_file (str): Filename for training data.
-            test_file (str): Filename for test data.
             cache_size (int | None, optional): Cache size for data storage (only
             applicable if data is in binary format). Defaults to None.
             dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
@@ -70,8 +66,8 @@ class LibFMTask:
         """
         self.method = method
         self.task = task
-        self.train_file = train_file
-        self.test_file = test_file
+        self.train_file = libfm.TRAIN_FILE
+        self.test_file = libfm.TEST_FILE
 
         self.cache_size = cache_size
         self.dim = dim
@@ -135,8 +131,6 @@ class StatelessLibFMTask(LibFMTask):
         self,
         method: str,
         task: str,
-        train_file: str,
-        test_file: str,
         *,
         cache_size: Union[int, None] = None,
         dim: Tuple[int, int, int] = (1, 1, 8),
@@ -156,8 +150,6 @@ class StatelessLibFMTask(LibFMTask):
         Args:
             method (str): Learning method ("sgd", "sgda", "als", "mcmc").
             task (str): "r"=regression, "c"=binary classification.
-            train_file (str): Filename for training data.
-            test_file (str): Filename for test data.
             cache_size (int | None, optional): Cache size for data storage (only
             applicable if data is in binary format). Defaults to None.
             dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
@@ -187,8 +179,6 @@ class StatelessLibFMTask(LibFMTask):
         super().__init__(
             method,
             task,
-            train_file,
-            test_file,
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,
@@ -279,8 +269,6 @@ class StatefulLibFMTask(LibFMTask):
         self,
         method: str,
         task: str,
-        train_file: str,
-        test_file: str,
         *,
         cache_size: Union[int, None] = None,
         dim: Tuple[int, int, int] = (1, 1, 8),
@@ -301,8 +289,6 @@ class StatefulLibFMTask(LibFMTask):
         Args:
             method (str): Learning method ("sgd", "sgda", "als", "mcmc").
             task (str): "r"=regression, "c"=binary classification.
-            train_file (str): Filename for training data.
-            test_file (str): Filename for test data.
             cache_size (int | None, optional): Cache size for data storage (only
             applicable if data is in binary format). Defaults to None.
             dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
@@ -334,8 +320,6 @@ class StatefulLibFMTask(LibFMTask):
         super().__init__(
             method,
             task,
-            train_file,
-            test_file,
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,
@@ -442,13 +426,12 @@ class StatefulLibFMTask(LibFMTask):
         shutil.copy(model_path, path)
 
 class DenseStatefulLibFMTask(StatefulLibFMTask):
+    """Dense libFM task that allows saving and loading of models."""
 
     def __init__(
         self,
         method: str,
         task: str,
-        train_file: str,
-        test_file: str,
         *,
         cache_size: Union[int, None] = None,
         dim: Tuple[int, int, int] = (1, 1, 8),
@@ -469,8 +452,6 @@ class DenseStatefulLibFMTask(StatefulLibFMTask):
         Args:
             method (str): Learning method ("sgd", "sgda", "als", "mcmc").
             task (str): "r"=regression, "c"=binary classification.
-            train_file (str): Filename for training data.
-            test_file (str): Filename for test data.
             cache_size (int | None, optional): Cache size for data storage (only
             applicable if data is in binary format). Defaults to None.
             dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
@@ -502,8 +483,6 @@ class DenseStatefulLibFMTask(StatefulLibFMTask):
         super().__init__(
             method,
             task,
-            train_file,
-            test_file,
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,

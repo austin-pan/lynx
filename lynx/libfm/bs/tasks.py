@@ -14,8 +14,6 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
         self,
         method: str,
         task: str,
-        train_file: str,
-        test_file: str,
         *,
         cache_size: Union[int, None] = None,
         dim: Tuple[int, int, int] = (1, 1, 8),
@@ -32,11 +30,31 @@ class BlockStatefulLibFMTask(tasks.StatefulLibFMTask):
 
         mat_dir: Union[str, None] = None
     ):
+        """
+        Args:
+            task (str): "r"=regression, "c"=binary classification.
+            cache_size (int | None, optional): Cache size for data storage (only
+            applicable if data is in binary format). Defaults to None.
+            dim (Tuple[int, int, int], optional): (k0,k1,k2): k0=use bias,
+            k1=use 1-way interactions, k2=dim of 2-way interactions. Defaults to
+            (1, 1, 8).
+            init_stdev (float, optional): Standard deviation for initialization of
+            2-way factors. Defaults to 0.1.
+            iter_num (int, optional): number of iterations. Defaults to 100.
+            meta (str | None, optional): Filename for meta (group) information about
+            data set. Defaults to None.
+            rlog (str | None): Filename to write iterative measurements to.
+            Defaults to None.
+            seed (int | None, optional): Random state seed. Defaults to None.
+            verbosity (int | None, optional): How much info to output to internal
+            command line.
+            mat_dir (str | None, optional): Directory with libFM files. Defaults
+            to creating a directory in `/tmp`. Only used by `lynx`, not passed to
+            libFM.
+        """
         super().__init__(
             method,
             task,
-            train_file,
-            test_file,
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,

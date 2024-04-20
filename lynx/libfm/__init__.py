@@ -11,6 +11,10 @@ APPS = {
     for tool in ["libFM", "transpose", "convert"]
 }
 
+TRAIN_FILE = "_libfm_train"
+TEST_FILE = "_libfm_test"
+VALIDATION_FILE = "_libfm_validation"
+
 def run(
     mat_dir: str,
     *,

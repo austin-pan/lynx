@@ -49,8 +49,6 @@ class ALSTask(tasks.BlockStatefulLibFMTask):
         super().__init__(
             method="als",
             task=task,
-            train_file="_libfm_train",
-            test_file="_libfm_test",
             cache_size=cache_size,
             dim=dim,
             init_stdev=init_stdev,
