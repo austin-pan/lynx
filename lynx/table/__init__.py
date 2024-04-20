@@ -5,6 +5,6 @@ from lynx.table.table import (
     merge,
     normalize,
     onehot,
-    explode,
+    manyhot,
     model_interactions
 )

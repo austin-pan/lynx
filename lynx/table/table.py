@@ -87,12 +87,26 @@ class Table:
         return [block.name for block in self.blocks]
 
     @property
+    def nnz(self) -> int:
+        """Number of non-zero elements in this Table when materialized."""
+        return sum(block.to_csr_matrix().nnz for block in self.blocks)
+
+    @property
     def block_nnz(self) -> int:
         """
         Number of non-zero elements in the non-materialized blocks when in
         sparse form.
         """
         return sum(block.get_block_csr_matrix().nnz for block in self.blocks)
+
+    @property
+    def columns(self) -> List[str]:
+        """Column names of DenseBlocks."""
+        columns = []
+        for block in self.blocks:
+            if isinstance(block, B.DenseBlock):
+                columns.extend(block.columns)
+        return columns
 
     def has_dense_block(self) -> bool:
         """Returns whether this Table has a DenseBlock."""
@@ -157,7 +171,25 @@ class Table:
         ]
         return pd.concat(indices, axis=1)
 
-    def _get_block(self, column: str) -> B.DenseBlock:
+    def get_block(self, block_name: str) -> B.Block:
+        """
+        Returns the B.DenseBlock in this Table that has the provided name.
+
+        Args:
+            block_name (str): Name of block to get.
+
+        Raises:
+            KeyError: Requested block doesn't exist.
+
+        Returns:
+            B.Block: Block with provided name.
+        """
+        for block in self.blocks:
+            if block.name == block_name:
+                return block
+        raise KeyError(f"There is no '{block_name}' block.")
+
+    def _get_block_by_column(self, column: str) -> B.DenseBlock:
         """
         Returns the B.DenseBlock in this Table that contains the specified column.
 
@@ -165,7 +197,7 @@ class Table:
             column (str): Column that block should contain.
 
         Raises:
-            ValueError: Requested column doesn't exist in any blocks of this
+            KeyError: Requested column doesn't exist in any blocks of this
             Table.
 
         Returns:
@@ -175,7 +207,7 @@ class Table:
         for block in self.blocks:
             if isinstance(block, B.DenseBlock) and column in block.data.columns:
                 return block
-        raise ValueError(f"{column} not found")
+        raise KeyError(f"{column} not found")
 
     def get(self, columns: Union[str, List[str]]) -> pd.DataFrame:
         """
@@ -191,7 +223,7 @@ class Table:
             columns = [columns]
 
         return pd.concat([
-            self._get_block(column).get(column)
+            self._get_block_by_column(column).get(column)
             for column in columns
         ], axis=1)
 
@@ -209,7 +241,7 @@ class Table:
         Returns:
             pd.Series: Popped column values.
         """
-        block = self._get_block(column)
+        block = self._get_block_by_column(column)
         values = block.pop(column)
         self.blocks = [block for block in self.blocks if block.shape[1] > 0]
         return values
@@ -346,7 +378,7 @@ class Table:
         """
         return normalize(self, columns, block_name, drop=drop)
 
-    def explode(
+    def manyhot(
         self,
         column: str,
         block_name: Union[str, None] = None,
@@ -368,7 +400,7 @@ class Table:
         Returns:
             Table: Table with the exploded column.
         """
-        return explode(self, column, block_name, drop=drop)
+        return manyhot(self, column, block_name, drop=drop)
 
     def model_interactions(
         self,
@@ -526,7 +558,7 @@ def normalize(
         table = table.drop(columns)
     return table.extend([normalized_block])
 
-def explode(
+def manyhot(
     table: Table,
     column: str,
     block_name: Union[str, None] = None,
@@ -535,7 +567,8 @@ def explode(
 ) -> Table:
     """
     Returns a new Table with an additional block that is the multi-hot encoding
-    of the provided columns.
+    of the provided column. The provided column should have lists of values to
+    expand.
 
     Args:
         table (Table): Table with the column to explode.
@@ -550,7 +583,7 @@ def explode(
         Table: Table with the exploded column.
     """
     if block_name is None:
-        block_name = f"{column}_exploded"
+        block_name = f"{column}_manyhot"
 
     mapped_index, unique_df = U.get_unique_mapping(table.get(column), column)
     multihot = U.multihot_series(unique_df[column])
