@@ -7,6 +7,8 @@ from sklearn import datasets
 import numpy as np
 
 import lynx as lx
+from lynx import libfm
+from lynx.write.libfm import utils
 
 def write_libfm(
     table: lx.Table,
@@ -38,12 +40,19 @@ def write_libfm(
         to False.
     """
     for block in table.blocks:
+        if block.name in {libfm.TRAIN_FILE, libfm.TEST_FILE, libfm.VALIDATION_FILE}:
+            raise ValueError(f"{block.name} is a reserved name.")
+
         if not ignore_block:
             data = block.get_block_csr_matrix()
             if data.shape[1] == 0:
                 print(f"Warning: Empty block {block.name}")
             if data.shape[1] == 1:
-                print(f"Warning: LibFM may not work with a block ({block.name}) of width 1")
+                print(
+                    f"Warning: libFM may not work with a block ({block.name}) " +
+                    "of width 1. Adding a column of zeros to make libFM happy."
+                )
+                data = utils.hack_sparse(data)
 
             datasets.dump_svmlight_file(
                 X=data,
