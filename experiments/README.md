@@ -2,7 +2,7 @@
 
 This directory contains files for reproducing some of the experiments mentioned in "[Scaling Factorization Machines to Relational Data](https://www.vldb.org/pvldb/vol6/p337-rendle.pdf)". The subdirectories are the names of the datasets that the experiments are for.
 
-The experiments here are for examining the performance of `libFM`, specifically the effects of using block structure which takes advantage of relational data.
+The experiments here are for examining the performance of `libFM`, specifically the effects of using block structure which takes advantage of relational data. To run them, the `data_loader.py` files in each experiment directory will have to be edited to customize `DATASET_PATH`, `SEED`, and number of rows read in for each table.
 
 ## Datasets
 
