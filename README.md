@@ -8,7 +8,7 @@ For ease of use and experiment reproducibility, `lynx` also provides loaders for
 
 ## Requirements
 
-* Unix environment
+* Unix OS
 * Python 3.6+
 
 ## Installation
