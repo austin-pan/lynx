@@ -41,7 +41,7 @@ echo "export LIBFM_HOME=$(pwd)" >> ~/.zshrc # Use your preferred terminal initia
 
 A detailed tutorial can be viewed at [examples/tutorial.ipynb](examples/tutorial.ipynb). And extra examples can be viewed in the [examples](examples) directory.
 
-Here's a quick example for working with relational data and using it with libFM's block structure algorithm.
+`lynx` introduces a new data structure, `Table`, for working with tabular data while retaining relational information which can then be used by specialized algorithms that take advantage of relations. Here's a quick example for working with relational data and using it with libFM's block structure algorithm.
 
 ```python
 import pandas as pd
