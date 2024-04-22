@@ -50,6 +50,7 @@ from sklearn.model_selection import train_test_split
 import lynx as lx
 from lynx.libfm.bs import als
 
+# Create ratings table
 movie_ratings = pd.DataFrame(
     [
         ["Alice", "TI", 5],
@@ -61,6 +62,7 @@ movie_ratings = pd.DataFrame(
 )
 movie_ratings_table = lx.Table(movie_ratings, "movie_ratings")
 
+# Create users table
 users = pd.DataFrame(
     [
         ["Alice", 20, "F"],
@@ -70,6 +72,7 @@ users = pd.DataFrame(
 )
 users_table = lx.Table(users, "users")
 
+# Merge ratings and users tables
 merged_table = (
     movie_ratings_table
     .merge(users_table, left_on="user_id", right_on="user_id")
@@ -81,6 +84,7 @@ print(merged_table.to_dataframe())
 # 2     Bob       SW       4         35      M
 # 3     Bob       ST       5         35      M
 
+# One-hot encode features in the merged table
 merged_table = (
     merged_table
     .onehot("age_group")
@@ -110,6 +114,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     merged_table, y,
     random_state=0
 )
+
 # Run libFM regression task using the ALS block structure algorithm
 fm = als.FMRegression(seed=0)
 fm.fit(X_train, y_train)
