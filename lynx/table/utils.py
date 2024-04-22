@@ -126,3 +126,20 @@ def dataframe_to_csr_matrix(data: pd.DataFrame) -> sparse.csr_matrix:
     """
     sparse_data = data.astype(pd.SparseDtype("float64", 0))
     return sparse_data.sparse.to_coo().tocsr()
+
+def normalize_sparse_rows(mat: sparse.csr_matrix) -> sparse.csr_matrix:
+    """
+    Returns a copy of the provided sparse matrix where each row has been divided
+    by the row sum.
+
+    Args:
+        mat (sparse.csr_matrix): Sparse matrix to normalize.
+
+    Returns:
+        sparse.csr_matrix: Normalized sparse matrix.
+    """
+    mat = mat.copy()
+    # Divide rows by non-zero row sums to get proportional votes
+    row_sums = np.asarray(mat.sum(axis=1)).squeeze()
+    mat.data = mat.data / row_sums[mat.nonzero()[0]]
+    return mat

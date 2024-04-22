@@ -1,7 +1,6 @@
 """Table class and utilities."""
 
 from typing import Dict, List, Sequence, Tuple, Union
-import numpy as np
 import pandas as pd
 from scipy import sparse
 
@@ -383,6 +382,7 @@ class Table:
         column: str,
         block_name: Union[str, None] = None,
         *,
+        proportional: bool = True,
         drop: bool = True
     ) -> "Table":
         """
@@ -392,21 +392,31 @@ class Table:
         Args:
             column (str): Column to explode.
             block_name (str | None, optional): Name to use for the new multi-hot
-            encoded block. If None, then appends "_exploded" to the provided column
+            encoded block. If None, then appends "_manyhot" to the provided column
             name. Defaults to None.
+            proportional (bool, optional): Whether to normalize rows. Deafults
+            to True.
             drop (bool, optional): Whether to drop the provided column. Defaults to
             True.
 
         Returns:
             Table: Table with the exploded column.
         """
-        return manyhot(self, column, block_name, drop=drop)
+        return manyhot(
+            self,
+            column,
+            block_name,
+            proportional=proportional,
+            drop=drop
+        )
 
     def model_interactions(
         self,
         index_features: Union[str, List[str]],
         value_features: Union[str, List[str]],
         block_name: Union[str, None] = None,
+        *,
+        proportional: bool = True
     ) -> "Table":
         """
         Returns a new Table with an additional block that is the interaction matrix
@@ -418,6 +428,8 @@ class Table:
             block_name (str | None, optional): Name to use for the new interactions
             block. If None, then joins the provided column names with an
             underscore and appends "_interactions". Defaults to None.
+            proportional (bool, optional): Whether to normalize rows. Defaults
+            to True.
 
         Returns:
             Table: Table with the feature interactions.
@@ -427,6 +439,7 @@ class Table:
             index_features,
             value_features,
             block_name,
+            proportional=proportional
         )
 
 def merge(
@@ -563,6 +576,7 @@ def manyhot(
     column: str,
     block_name: Union[str, None] = None,
     *,
+    proportional: bool = True,
     drop: bool = True
 ) -> Table:
     """
@@ -574,8 +588,10 @@ def manyhot(
         table (Table): Table with the column to explode.
         column (str): Column to explode.
         block_name (str | None, optional): Name to use for the new multi-hot
-        encoded block. If None, then appends "_exploded" to the provided column
+        encoded block. If None, then appends "_manyhot" to the provided column
         name. Defaults to None.
+        proportional (bool, optional): Whether to normalize rows. Defaults to
+        True.
         drop (bool, optional): Whether to drop the provided column. Defaults to
         True.
 
@@ -587,6 +603,8 @@ def manyhot(
 
     mapped_index, unique_df = U.get_unique_mapping(table.get(column), column)
     multihot = U.multihot_series(unique_df[column])
+    if proportional:
+        multihot = U.normalize_sparse_rows(multihot)
     exploded_block = B.SparseBlock(block_name, multihot, index=mapped_index)
 
     if drop:
@@ -598,7 +616,8 @@ def model_interactions(
     index_features: Union[str, List[str]],
     value_features: Union[str, List[str]],
     block_name: Union[str, None] = None,
-    use_onehot: bool = False,
+    *,
+    proportional: bool = True
 ) -> Table:
     """
     Returns a new Table with an additional block that is the interaction matrix
@@ -611,6 +630,8 @@ def model_interactions(
         block_name (str | None, optional): Name to use for the new interactions
         block. If None, then joins the provided column names with an
         underscore and appends "_interactions". Defaults to None.
+        proportional (bool, optional): Whether to normalize rows. Defaults to
+        True.
 
     Returns:
         Table: Table with the feature interactions.
@@ -631,10 +652,9 @@ def model_interactions(
         index_features,
         value_features
     )
-    if not use_onehot:
+    if proportional:
         # Divide rows by non-zero row sums to get proportional votes
-        row_sums = np.asarray(interactions.sum(axis=1)).squeeze()
-        interactions.data = interactions.data / row_sums[interactions.nonzero()[0]]
+        interactions = U.normalize_sparse_rows(interactions)
     interactions_block = B.SparseBlock(block_name, interactions, index=mapped_index)
 
     return table.extend([interactions_block])
