@@ -29,10 +29,10 @@ def write_libfm(
     if not empty:
         data = table.to_csr_matrix()
         if data.shape[1] == 1:
-            print(
-                "Warning: libFM may not work with a matrix of width 1. Adding " +
-                "a column of zeros to make libFM happy."
-            )
+            # print(
+            #     "Warning: libFM may not work with a matrix of width 1. Adding " +
+            #     "a column of zeros to make libFM happy."
+            # )
             data = utils.hack_sparse(data)
 
         datasets.dump_svmlight_file(X=data, y=target, f=path) # type: ignore

@@ -48,10 +48,10 @@ def write_libfm(
             if data.shape[1] == 0:
                 print(f"Warning: Empty block {block.name}")
             if data.shape[1] == 1:
-                print(
-                    f"Warning: libFM may not work with a block ({block.name}) " +
-                    "of width 1. Adding a column of zeros to make libFM happy."
-                )
+                # print(
+                #     f"Warning: libFM may not work with a block ({block.name}) " +
+                #     "of width 1. Adding a column of zeros to make libFM happy."
+                # )
                 data = utils.hack_sparse(data)
 
             datasets.dump_svmlight_file(
