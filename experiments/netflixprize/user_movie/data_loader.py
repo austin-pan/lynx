@@ -16,10 +16,9 @@ def load_train_test() -> Tuple[lx.Table, lx.Table, pd.Series, lx.Table, pd.Serie
     )
     netflix_table = (
         lx.Table(ratings_data, "ratings")
-        .drop("date")
-        .model_interactions("user_id", "movie_id")
         .onehot("movie_id")
         .onehot("user_id")
+        .drop("date")
     )
 
     y = netflix_table.pop("rating")

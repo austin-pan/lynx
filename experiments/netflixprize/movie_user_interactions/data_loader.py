@@ -12,7 +12,7 @@ VERBOSE = False
 def load_train_test() -> Tuple[lx.Table, lx.Table, pd.Series, lx.Table, pd.Series]:
     ratings_data = netflixprize.load_data(
         DATASET_PATH,
-        nrows=10
+        num_movies=10
     )
     netflix_table = (
         lx.Table(ratings_data, "ratings")

@@ -382,7 +382,7 @@ class Table:
         column: str,
         block_name: Union[str, None] = None,
         *,
-        proportional: bool = True,
+        onehot: bool = False,
         drop: bool = True
     ) -> "Table":
         """
@@ -394,8 +394,8 @@ class Table:
             block_name (str | None, optional): Name to use for the new multi-hot
             encoded block. If None, then appends "_manyhot" to the provided column
             name. Defaults to None.
-            proportional (bool, optional): Whether to normalize rows. Deafults
-            to True.
+            onehot (bool, optional): Whether to set cells to 1. Defaults
+            to False.
             drop (bool, optional): Whether to drop the provided column. Defaults to
             True.
 
@@ -406,7 +406,7 @@ class Table:
             self,
             column,
             block_name,
-            proportional=proportional,
+            onehot=onehot,
             drop=drop
         )
 
@@ -416,7 +416,8 @@ class Table:
         value_features: Union[str, List[str]],
         block_name: Union[str, None] = None,
         *,
-        proportional: bool = True
+        onehot: bool = False,
+        freq: bool = False
     ) -> "Table":
         """
         Returns a new Table with an additional block that is the interaction matrix
@@ -428,8 +429,10 @@ class Table:
             block_name (str | None, optional): Name to use for the new interactions
             block. If None, then joins the provided column names with an
             underscore and appends "_interactions". Defaults to None.
-            proportional (bool, optional): Whether to normalize rows. Defaults
-            to True.
+            onehot (bool, optional): Whether to interaction cells should be set to
+            1. Defaults to False.
+            freq (bool, optional): Whether to count frequencies of interactions
+            instead of using interactions matrix. Defaults to False.
 
         Returns:
             Table: Table with the feature interactions.
@@ -439,7 +442,8 @@ class Table:
             index_features,
             value_features,
             block_name,
-            proportional=proportional
+            onehot=onehot,
+            freq=freq
         )
 
 def merge(
@@ -576,7 +580,7 @@ def manyhot(
     column: str,
     block_name: Union[str, None] = None,
     *,
-    proportional: bool = True,
+    onehot: bool = True,
     drop: bool = True
 ) -> Table:
     """
@@ -590,7 +594,7 @@ def manyhot(
         block_name (str | None, optional): Name to use for the new multi-hot
         encoded block. If None, then appends "_manyhot" to the provided column
         name. Defaults to None.
-        proportional (bool, optional): Whether to normalize rows. Defaults to
+        onehot (bool, optional): Whether to set cells to 1. Defaults to
         True.
         drop (bool, optional): Whether to drop the provided column. Defaults to
         True.
@@ -603,7 +607,7 @@ def manyhot(
 
     mapped_index, unique_df = U.get_unique_mapping(table.get(column), column)
     multihot = U.multihot_series(unique_df[column])
-    if proportional:
+    if not onehot:
         multihot = U.normalize_sparse_rows(multihot)
     exploded_block = B.SparseBlock(block_name, multihot, index=mapped_index)
 
@@ -617,7 +621,8 @@ def model_interactions(
     value_features: Union[str, List[str]],
     block_name: Union[str, None] = None,
     *,
-    proportional: bool = True
+    onehot: bool = False,
+    freq: bool = False
 ) -> Table:
     """
     Returns a new Table with an additional block that is the interaction matrix
@@ -629,13 +634,19 @@ def model_interactions(
         value_features (str | List[str]): Value columns.
         block_name (str | None, optional): Name to use for the new interactions
         block. If None, then joins the provided column names with an
-        underscore and appends "_interactions". Defaults to None.
-        proportional (bool, optional): Whether to normalize rows. Defaults to
-        True.
+        underscore and appends "_interactions" or "_freq" depending on the
+        operation. Defaults to None.
+        onehot (bool, optional): Whether to interaction cells should be set to
+        1. Defaults to False.
+        freq (bool, optional): Whether to count frequencies of interactions
+        instead of using interactions matrix. Defaults to False.
 
     Returns:
         Table: Table with the feature interactions.
     """
+    if sum([onehot, freq]) > 1:
+        raise ValueError("Only one of proportional and freq can be set to True")
+
     if isinstance(index_features, str):
         index_features = [index_features]
     if isinstance(value_features, str):
@@ -643,7 +654,10 @@ def model_interactions(
     features = index_features + value_features
 
     if block_name is None:
-        block_name = f"{'_'.join(features)}_interactions"
+        if freq:
+            block_name = f"{'_'.join(features)}_freq"
+        else:
+            block_name = f"{'_'.join(features)}_interactions"
 
     mapped_index, _ = U.get_unique_mapping(table.get(index_features), index_features)
 
@@ -652,9 +666,14 @@ def model_interactions(
         index_features,
         value_features
     )
-    if proportional:
+    if onehot:
+        interactions_block = B.SparseBlock(block_name, interactions, index=mapped_index)
+    elif freq:
+        frequencies = U.sparse_row_sums(interactions)
+        interactions_block = B.DenseBlock(block_name, pd.DataFrame(frequencies), index=mapped_index)
+    else:
         # Divide rows by non-zero row sums to get proportional votes
         interactions = U.normalize_sparse_rows(interactions)
-    interactions_block = B.SparseBlock(block_name, interactions, index=mapped_index)
+        interactions_block = B.SparseBlock(block_name, interactions, index=mapped_index)
 
     return table.extend([interactions_block])

@@ -24,13 +24,13 @@ def download(destination: str) -> None:
     os.remove(archive_path)
     os.remove(os.path.join(destination, "download", "training_set.tar"))
 
-def load_data(dataset_path: str, nrows: Union[int, None] = None) -> pd.DataFrame:
+def load_data(dataset_path: str, num_movies: Union[int, None] = None) -> pd.DataFrame:
     """
     Load Netflix Prize training data.
 
     Args:
         dataset_path (str): Path to dataset directory.
-        nrows (int | None, optional): Number of rows to load. Defaults to
+        num_movies (int | None, optional): Number of movies to load. Defaults to
         None.
 
     Returns:
@@ -39,7 +39,7 @@ def load_data(dataset_path: str, nrows: Union[int, None] = None) -> pd.DataFrame
     dataset_path = os.path.expanduser(dataset_path)
     movies_path = os.path.join(dataset_path, "training_set")
     movie_files = [f for f in os.listdir(movies_path) if f.endswith(".txt")]
-    movie_files = movie_files if nrows is None else movie_files[:nrows]
+    movie_files = movie_files if num_movies is None else movie_files[:num_movies]
     rows = []
     for mf in movie_files:
         with open(os.path.join(movies_path, mf), "r", encoding="utf-8") as f:

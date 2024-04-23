@@ -127,6 +127,18 @@ def dataframe_to_csr_matrix(data: pd.DataFrame) -> sparse.csr_matrix:
     sparse_data = data.astype(pd.SparseDtype("float64", 0))
     return sparse_data.sparse.to_coo().tocsr()
 
+def sparse_row_sums(mat: sparse.csr_matrix) -> np.ndarray:
+    """
+    Returns the row sums of the provided sparse matrix.
+
+    Args:
+        mat (sparse.csr_matrix): Sparse matrix to take row sums for.
+
+    Returns:
+        np.ndarray: Row sums of sparse matrix.
+    """
+    return np.asarray(mat.sum(axis=1)).squeeze()
+
 def normalize_sparse_rows(mat: sparse.csr_matrix) -> sparse.csr_matrix:
     """
     Returns a copy of the provided sparse matrix where each row has been divided
@@ -140,6 +152,10 @@ def normalize_sparse_rows(mat: sparse.csr_matrix) -> sparse.csr_matrix:
     """
     mat = mat.copy()
     # Divide rows by non-zero row sums to get proportional votes
-    row_sums = np.asarray(mat.sum(axis=1)).squeeze()
+    row_sums = sparse_row_sums(mat)
     mat.data = mat.data / row_sums[mat.nonzero()[0]]
     return mat
+
+def normalize_numbers(data: pd.Series) -> pd.Series:
+    """Numerically normalize a pandas series using min-max normalization."""
+    return (data - np.min(data)) / (np.max(data) - np.min(data))

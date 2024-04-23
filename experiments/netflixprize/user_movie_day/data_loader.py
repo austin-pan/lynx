@@ -1,4 +1,5 @@
 from typing import Tuple
+from datetime import datetime
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import lynx as lx
@@ -14,12 +15,13 @@ def load_train_test() -> Tuple[lx.Table, lx.Table, pd.Series, lx.Table, pd.Serie
         DATASET_PATH,
         num_movies=10
     )
+    ratings_data["date"] = ratings_data["date"].apply(lambda d: datetime.strptime(d, "%Y-%m-%d"))
+    ratings_data["day"] = ratings_data["date"].apply(lambda d: d.weekday())
     netflix_table = (
         lx.Table(ratings_data, "ratings")
-        .drop("date")
-        .model_interactions("user_id", "movie_id")
         .onehot("movie_id")
         .onehot("user_id")
+        .drop("date")
     )
 
     y = netflix_table.pop("rating")
