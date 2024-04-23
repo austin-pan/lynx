@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lynx"
+version = "0.0.1"
+dependencies = ["numpy", "scipy", "scikit-learn", "pandas"]
+requires-python = ">=3.6"
+authors = [
+  {name = "Austin Pan"}
+]
+description = "Taking advantage of relational data made easy."
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[project.urls]
+repository = "https://github.com/austin-pan/lynx"
