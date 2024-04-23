@@ -16,7 +16,7 @@ For ease of use and experiment reproducibility, `lynx` also provides loaders for
 We recommend using `conda` (https://docs.conda.io/en/latest/) environments to keep library environments clean.
 
 ```sh
-pip install 'git+https://github.com/austin-pan/lynx'
+pip install -e 'git+https://github.com/austin-pan/lynx#egg=lynx'
 ```
 
 ### libFM
