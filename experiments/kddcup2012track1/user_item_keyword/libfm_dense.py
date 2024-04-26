@@ -1,5 +1,5 @@
 import data_loader
-from experiments import libfm_dense_exp
+from lynx.exp import libfm_dense_exp
 
 rating_table, X_train, y_train, X_test, y_test = data_loader.load_train_test()
 libfm_dense_exp.run(
