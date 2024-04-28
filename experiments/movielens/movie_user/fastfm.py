@@ -1,31 +1,31 @@
+"""
+Produce RMSE and timing statistics for FastFM. Note: FastFM only works with
+Python 3.6 or lower.
+"""
 import time
 
 import data_loader
 import pandas as pd
+from fastFM import mcmc
 from sklearn.metrics import mean_squared_error
-
-from lynx.libfm.bs import mcmc
 
 
 OUTPATH = None
 
-rating_table, X_train, y_train, X_test, y_test = data_loader.load_train_test()
+_, X_train, y_train, X_test, y_test = data_loader.load_train_test()
 
-print(f"NNZ(BS): {rating_table.block_nnz:,}")
+X_train_csr = X_train.to_csr_matrix()
+X_test_csr = X_test.to_csr_matrix()
 
 results = []
-for k in [128]:
+for k in [2, 4, 6, 8, 10, 12]:
     print(f"k={k}")
 
-    fm = mcmc.FMRegression(iter_num=100, dim=(1, 1, k), seed=data_loader.SEED)
-
-    fm.write(X_train, y_train, X_test, verbose=data_loader.VERBOSE)
+    fm = mcmc.FMRegression(n_iter=200, rank=k, init_stdev=0.1, random_state=data_loader.SEED)
 
     start_time = time.perf_counter()
-    cmd_output = fm.train(verbose=data_loader.VERBOSE)
+    predictions = fm.fit_predict(X_train_csr, y_train, X_test_csr)
     end_time = time.perf_counter()
-
-    predictions = fm.get_predictions()
 
     rmse = mean_squared_error(predictions, y_test, squared=False)
     train_time = end_time - start_time
@@ -33,7 +33,6 @@ for k in [128]:
     row = {"k": k, "train_time": train_time, "rmse": rmse}
     results.append(row)
     print(row)
-    fm.flush()
 results_frame = pd.DataFrame(results)
 print(results_frame)
 if OUTPATH is not None:

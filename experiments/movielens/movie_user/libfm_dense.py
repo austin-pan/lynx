@@ -4,20 +4,20 @@ import data_loader
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-from lynx.libfm.bs import mcmc
+from lynx.libfm import mcmc
 
 
 OUTPATH = None
 
 rating_table, X_train, y_train, X_test, y_test = data_loader.load_train_test()
 
-print(f"NNZ(BS): {rating_table.block_nnz:,}")
+print(f"NNZ(X): {rating_table.nnz:,}")
 
 results = []
-for k in [128]:
+for k in [2, 4, 6, 8, 10, 12]:
     print(f"k={k}")
 
-    fm = mcmc.FMRegression(iter_num=100, dim=(1, 1, k), seed=data_loader.SEED)
+    fm = mcmc.FMRegression(iter_num=200, dim=(1, 1, k), seed=data_loader.SEED)
 
     fm.write(X_train, y_train, X_test, verbose=data_loader.VERBOSE)
 
